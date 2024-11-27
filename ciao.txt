@@ -1,4 +1,0 @@
-k the initial population in grid cell (0, 0)
-    double prey = grid.getPrey(0, 0);
-    double predators =
-    

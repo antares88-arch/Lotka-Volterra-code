@@ -1,54 +1,63 @@
-#include <iostream>
-#include <cassert>
-#include "Grid.h"  // Include the Grid class
+#ifndef GRID_H
+#define GRID_H
 
-void testInitialization() {
-    // Create a small 2x2 grid with certain initial population densities
-    Grid grid(2, 2, 0.1, 0.02, 0.02, 0.01, 0.02, 0.05, 0.1, 10, 10, 10);
+#include <vector>
+#include <random>
 
-    // Check the initial population in grid cell (0, 0)
-    double prey = grid.getPrey(0, 0);
-    double predators = grid.getPredators(0, 0);
-    double scavengers = grid.getScavengers(0, 0);
+// Struct to hold population data for each grid cell
+//he struct Cell is used to represent the state of each "cell" in the grid. Each cell contains:
 
-    // We don't know the exact values, but they should be in the range [0, density]
-    assert(prey >= 0 && prey <= 10);
-    assert(predators >= 0 && predators <= 10);
-    assert(scavengers >= 0 && scavengers <= 10);
+//prey: The population of prey in that cell.
+//predators: The population of predators in that cell.
+//By using a struct, we bundle these two variables together because they are always logically linked: a cell in the grid has both prey and predator populations. This simplifies the code and makes it easier to manage and understand.
+struct Cell {
+    double prey;
+    double predators;
+    double scavengers;  // Scavenger population
+};
 
-    std::cout << "Initialization Test Passed!" << std::endl;
-}
+// Grid class to manage the simulation
+//his is a two-dimensional vector, which represents the grid in the simulation.
 
-void testPopulationUpdate() {
-    // Create a small 2x2 grid with certain initial population densities
-    Grid grid(2, 2, 0.1, 0.02, 0.02, 0.01, 0.02, 0.05, 0.1, 10, 10, 10);
+//Outer vector (std::vector<std::vector<Cell>>): Represents rows of the grid.
+//Inner vector (std::vector<Cell>): Represents the cells in each row.
+//So, cells is essentially a grid of Cell objects. Here's how it works:
 
-    // Store initial populations
-    double initialPrey = grid.getPrey(0, 0);
-    double initialPredators = grid.getPredators(0, 0);
-    double initialScavengers = grid.getScavengers(0, 0);
+//Each element in the outer vector is a row of the grid.
+//Each element in the inner vector is a single cell in that row.
+//For example:
 
-    // Update the grid (this simulates the biological process)
-    grid.update();
+//If the grid has 3 rows and 4 columns, cells will contain 3 outer vectors (rows), each containing 4 Cell objects (columns).
+class Grid {
+private:
+    int width, height;
+    double r, a, b, d, s_growth_rate, scavengerFood, dt;
+    std::vector<std::vector<Cell>> cells;
 
-    // After updating, populations should change (though not drastically)
-    double updatedPrey = grid.getPrey(0, 0);
-    double updatedPredators = grid.getPredators(0, 0);
-    double updatedScavengers = grid.getScavengers(0, 0);
+    // Random number generator
+    std::random_device rd;
+    std::mt19937 gen;
 
-    // Ensure the populations have changed (simple check, should be > initial values)
-    assert(updatedPrey != initialPrey);
-    assert(updatedPredators != initialPredators);
-    assert(updatedScavengers != initialScavengers);
+    void initializeGrid(double preyDensity, double predatorDensity, double scavengerDensity);
 
-    std::cout << "Population Update Test Passed!" << std::endl;
-}
+public:
+    // Constructor
+    Grid(int w, int h, double r, double a, double b, double d, double s_growth_rate, double scavengerFood, double dt,
+         double preyDensity, double predatorDensity, double scavengerDensity);
 
-int main() {
-    // Run the tests
-    testInitialization();
-    testPopulationUpdate();
+    // Getter methods to access population data at specific grid locations
+    double getPrey(int x, int y) const;
+    double getPredators(int x, int y) const;
+    double getScavengers(int x, int y) const;
 
-    std::cout << "All tests passed successfully!" << std::endl;
-    return 0;
-}
+    // Update populations based on the Volterra-Lotka equations
+    void update();
+
+    // Apply a natural disaster (wipes out populations in a random grid cell)
+    void applyNaturalDisaster();
+
+    // Display grid state
+    void display() const;
+};
+
+#endif // GRID_H
